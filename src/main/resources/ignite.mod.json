@@ -1,0 +1,12 @@
+{
+  "id": "test",
+  "version": "1.0.0",
+  "entry": "com.molean.ignite.test.Test",
+  "dependencies": [
+    "ignite"
+  ],
+  "mixins": [
+    "test.mixins.json"
+  ],
+  "accessWidener": "test.accesswidener"
+}

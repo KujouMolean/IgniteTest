@@ -1,0 +1,75 @@
+plugins {
+    id 'java'
+    id 'com.github.johnrengelman.shadow' version '7.0.0'
+    id "io.github.rancraftplayz.remapper" version "1.0.2"
+}
+
+sourceCompatibility = JavaVersion.VERSION_17
+targetCompatibility = JavaVersion.VERSION_17
+
+archivesBaseName = project.archives_base_name
+//version = project.minecraft_version+'-'+project.mod_version+'+v'+new Date().format('yyMMdd')
+version = project.minecraft_version+'-'+project.mod_version
+group = project.maven_group
+
+configurations {
+    shade // The things to put in the shadowJar
+    implementation.extendsFrom remapLib // Make the remapLib show up as a dependency
+    implementation.extendsFrom shade // Make the shaded stuff show up as a dependency
+    accessWidenerLib.extendsFrom implementation // Make so the access wideners will be applied to all implemented dependencies
+}
+
+repositories {
+    maven {
+        url = "https://repo.spongepowered.org/maven/"
+    }
+    mavenCentral()
+    mavenLocal()
+}
+
+dependencies {
+    implementation 'org.jetbrains:annotations:20.1.0'
+    remapLib "org.spigotmc:spigot:${project.spigot_version}:remapped-mojang"
+    accessWidener fileTree(dir: 'src/main/resources', include: ['*.accesswidener'])
+    implementation "space.vectrix.ignite:ignite-api:${project.ignite_version}"
+    implementation "org.spongepowered:mixin:${project.mixin_version}"
+}
+
+processResources {
+    inputs.property "version", project.version
+    filteringCharset "UTF-8"
+
+    filesMatching("ignite.mod.json") {
+        expand "version": project.version
+    }
+}
+
+spigot {
+    version = project.minecraft_version
+}
+
+tasks.withType(JavaCompile).configureEach {
+    it.options.encoding = "UTF-8"
+    it.options.release = 17
+}
+
+java {
+    withSourcesJar()
+}
+
+jar {
+    from("LICENSE") {
+        rename { "${it}_${project.archivesBaseName}"}
+    }
+}
+
+shadowJar {
+    configurations = [project.configurations.getByName("shade")]
+    classifier ''
+    mergeServiceFiles()
+}
+
+
+
+jar.finalizedBy(shadowJar)
+shadowJar.finalizedBy(remapJar)
